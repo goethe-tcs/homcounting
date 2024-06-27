@@ -1,21 +1,15 @@
-
 pub mod single_running_time_measurement {
-    use std::fs;
-    use std::fs::{OpenOptions, ReadDir};
-    use std::ops::Add;
-    use std::path::Path;
-    use std::time::{Duration, Instant};
-    use csv;
-    use itertools::Itertools;
-    use petgraph::matrix_graph::MatrixGraph;
-    use petgraph::Undirected;
-    use crate::brute_force::brute_force_homomorphism_counter::simple_brute_force_for_ntd_set;
-    use crate::diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_for_ntd_set;
-    use crate::modified_dp::algorithm::modified_dp;
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
     use crate::graph_generation::graph_generation_algorithms::generate_possible_edges;
     use crate::tree_decompositions::nice_tree_decomposition::NiceTreeDecomposition;
+    use csv;
+    use petgraph::matrix_graph::MatrixGraph;
+    use petgraph::Undirected;
+    use std::fs;
+    use std::fs::OpenOptions;
+    use std::path::Path;
+    use std::time::{Duration, Instant};
 
     const RESULT_PATH: &str = "./target/experiment_results/";
     const NTD_PATH: &str = "data/Experiments/ntds/";
@@ -23,18 +17,19 @@ pub mod single_running_time_measurement {
 
     /// lists necessary information of the tree decomposition and write them into a csv file
     pub fn list_ntd_data() {
-
         // Construct file path of output file
         let result_path = "./target/benchmark_results/";
         let filepath = format!("{}ntd_data.csv", result_path);
         let filepath = Path::new(&filepath);
 
-        for ntd_path in fs::read_dir("./data/nice_tree_decompositions/benchmark_ntds/final_selection").unwrap() {
+        for ntd_path in
+            fs::read_dir("./data/nice_tree_decompositions/benchmark_ntds/final_selection").unwrap()
+        {
             let ntd_name = ntd_path.as_ref().unwrap().file_name();
 
             println!("file: {:?}", ntd_name);
 
-            let mut file = OpenOptions::new()
+            let file = OpenOptions::new()
                 .write(true)
                 .create(true)
                 .append(true)
@@ -43,26 +38,39 @@ pub mod single_running_time_measurement {
 
             let mut wtr = csv::Writer::from_writer(file);
 
-
             let ntd = import_ntd(ntd_path.as_ref().unwrap().path()).unwrap();
 
             let width = ntd.width();
             let v_t = ntd.node_count();
-            let e_tau = generate_possible_edges(&ntd).get(&ntd.root()).unwrap().len();
+            let e_tau = generate_possible_edges(&ntd)
+                .get(&ntd.root())
+                .unwrap()
+                .len();
             let v_tau = ntd.vertex_count();
 
-            wtr.write_record(&["DATA",
+            if let Err(e) = wtr.write_record(&[
+                "DATA",
                 &ntd_name.to_str().unwrap(),
                 &width.to_string(),
                 &v_t.to_string(),
                 &e_tau.to_string(),
-                &v_tau.to_string()]);
+                &v_tau.to_string(),
+            ]) {
+                // Handle the error, e.g., log it or convert it into a user-friendly message
+                println!("Failed to write record: {}", e);
+            }
         }
     }
 
     /// This methods executes the experiment given by matrix_path with the algorithm alg and the name alg_name
-    pub fn measure_running_time(matrix_file : &Path, alg : fn(&NiceTreeDecomposition, &MatrixGraph<(), (), Undirected>) -> Vec<(MatrixGraph<(), (), Undirected>, u64)>, alg_name : &String){
-
+    pub fn measure_running_time(
+        matrix_file: &Path,
+        alg: fn(
+            &NiceTreeDecomposition,
+            &MatrixGraph<(), (), Undirected>,
+        ) -> Vec<(MatrixGraph<(), (), Undirected>, u64)>,
+        alg_name: &String,
+    ) {
         let test_name = matrix_file.file_stem().unwrap().to_str().unwrap();
 
         // Setting output path
@@ -75,7 +83,6 @@ pub mod single_running_time_measurement {
 
         println!("###### Running time experiment for {} ####", alg_name);
 
-
         // iterates over all ntd
         for record in reader.records() {
             let record = record.unwrap();
@@ -87,7 +94,9 @@ pub mod single_running_time_measurement {
             // iterate over all graphs
             for (u, v) in record.iter().enumerate() {
                 // u = 0 is just the ntd_name or the graph should not been measured
-                if u == 0 || v.parse::<u32>().unwrap() == 0 { continue; }
+                if u == 0 || v.parse::<u32>().unwrap() == 0 {
+                    continue;
+                }
 
                 let graph_name = &headers[u];
                 let single_graph_path = format!("{}{}", GRAPH_PATH, graph_name);
@@ -97,7 +106,7 @@ pub mod single_running_time_measurement {
                 let graph = import_metis(single_graph_path).unwrap();
 
                 // Open the writer for the csv output
-                let mut file = OpenOptions::new()
+                let file = OpenOptions::new()
                     .write(true)
                     .create(true)
                     .append(true)
@@ -108,7 +117,10 @@ pub mod single_running_time_measurement {
 
                 let width = ntd.width();
                 let v_t = ntd.node_count();
-                let e_tau = generate_possible_edges(&ntd).get(&ntd.root()).unwrap().len();
+                let e_tau = generate_possible_edges(&ntd)
+                    .get(&ntd.root())
+                    .unwrap()
+                    .len();
                 let v_tau = ntd.vertex_count();
 
                 let v_g = graph.node_count();
@@ -116,7 +128,10 @@ pub mod single_running_time_measurement {
 
                 //Equivalence class algorithm
                 let mut measurements = vec![];
-                println!("Running experiment for ntd {:?} and graph {:?}", ntd_name, graph_name);
+                println!(
+                    "Running experiment for ntd {:?} and graph {:?}",
+                    ntd_name, graph_name
+                );
 
                 for i in 0..5 {
                     println!("running test number {}", i + 1);
@@ -133,7 +148,7 @@ pub mod single_running_time_measurement {
                 let avg_measurements = sum.div_f32(measurements.len() as f32);
                 println!("average running time is {:?}", avg_measurements);
 
-                wtr.write_record(&[
+                if let Err(e) = wtr.write_record(&[
                     &alg_name,
                     &ntd_name.to_string(),
                     &width.to_string(),
@@ -149,10 +164,11 @@ pub mod single_running_time_measurement {
                     &measurements[3].as_micros().to_string(),
                     &measurements[4].as_micros().to_string(),
                     &avg_measurements.as_micros().to_string(),
-                ]
-                );
+                ]) {
+                    // Handle the error, e.g., log it or convert it into a user-friendly message
+                    println!("Failed to write record: {}", e);
+                }
             }
         }
-
     }
 }

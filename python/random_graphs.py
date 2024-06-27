@@ -2,19 +2,26 @@
 
 import random
 
-FILE_PATH = '../data/metis_graphs/auto_generated_graphs/'
+FILE_PATH = "../data/metis_graphs/auto_generated_graphs/"
+
 
 def random_graph(n, m):
-    text = "% Random generated graph with " + str(n) + " vertices and " + str(m) + " edges. \n"
+    text = (
+        "% Random generated graph with "
+        + str(n)
+        + " vertices and "
+        + str(m)
+        + " edges. \n"
+    )
     text += str(n) + " " + str(m)
 
     adjacency_matrix = [[0 for x in range(n)] for y in range(n)]
 
-    for i in range(m):
+    for _ in range(m):
         set = False
         while not set:
-            u = random.randint(0, n-1)
-            v = random.randint(0, n-1)
+            u = random.randint(0, n - 1)
+            v = random.randint(0, n - 1)
 
             if adjacency_matrix[u][v] == 0:
                 # we assume undirected graphs with self loops
@@ -27,7 +34,6 @@ def random_graph(n, m):
         first = True
         for j in range(n):
             if adjacency_matrix[i][j] == 1:
-
                 if first:
                     text += str(j + 1)
                     first = False
@@ -39,12 +45,12 @@ def random_graph(n, m):
 
 # a function that exports the generated graphs into files
 def text_to_file(text, file_name):
-    f = open(file_name, "w")
-    f.write(text)
-    f.close()
+    with open(file_name, "w") as f:
+        f.write(text)
+
 
 # A function generating a random graph for fixed n and m
-def generate_graph_for_fixed_n_and_m(n,m):
+def generate_graph_for_fixed_n_and_m(n, m):
     text = random_graph(n, m)
     filename = "randgraph_" + str(n) + "_" + str(m) + ".graph"
     text_to_file(text, FILE_PATH + filename)
@@ -52,14 +58,16 @@ def generate_graph_for_fixed_n_and_m(n,m):
 
 # A function calculating all graphs
 def generate_graphs():
-
     max_exponent = 14
 
     for i in range(2, max_exponent + 1):
         print("generating graph with " + str(2**i) + " vertices")
-        # random graph with 2**i vertices and random number of edges between 2**i and (2**i) ** 2
+        # graph with 2^i vertices and random number of edges between 2^i and 2^(2i)
 
-        generate_graph_for_fixed_n_and_m(2**i, random.randint(2**i , (2**i) * (2**i - 1) * (1/2)))
+        generate_graph_for_fixed_n_and_m(
+            2**i, random.randint(2**i, (2**i) * (2**i - 1) * (1 / 2))
+        )
 
 
-generate_graphs()
+if __name__ == "__main__":
+    generate_graphs()

@@ -11,8 +11,8 @@ pub mod integer_functions_methods {
     /// This is achieved by by shifting all digits s positions to the right and then take the rest
     /// of the division by n which removes the least significant digit.
     #[inline]
-    pub fn apply(n : Mapping, f : Mapping, s : Mapping) -> Mapping{
-        ( f / (n.pow(s as u32) as u64) ) % n
+    pub fn apply(n: Mapping, f: Mapping, s: Mapping) -> Mapping {
+        (f / (n.pow(s as u32) as u64)) % n
     }
 
     /// Given the integer function f of basis n. Extend increases the number of digits by one.
@@ -20,7 +20,7 @@ pub mod integer_functions_methods {
     /// to the left(increase their significance by one). Then the digit with significance s will
     /// be set to v
     #[inline]
-    pub fn extend(n : Mapping, f : Mapping, s : Mapping, v : Mapping) -> Mapping{
+    pub fn extend(n: Mapping, f: Mapping, s: Mapping, v: Mapping) -> Mapping {
         let r = f % (n.pow(s as u32) as Mapping);
         let l = f - r;
         (n * l) + (n.pow(s as u32) as Mapping) * v + r
@@ -30,7 +30,7 @@ pub mod integer_functions_methods {
     /// This will be done by deleting the digit with significance s and then shifting all digits
     /// with higher significance one to the right (decrease their significance by one).
     #[inline]
-    pub fn reduce(n : Mapping, f : Mapping, s : Mapping) -> Mapping{
+    pub fn reduce(n: Mapping, f: Mapping, s: Mapping) -> Mapping {
         let r = f % n.pow(s as u32);
         let l = f - (f % n.pow((s + 1) as u32));
         (l / n) + r
@@ -40,12 +40,12 @@ pub mod integer_functions_methods {
     /// a set of n elements. This mappings can be represented by the integers
     /// {0,1,...,max_mapping - 1}
     #[inline]
-    pub fn max_mappings(d : Mapping, n : Mapping) -> Mapping{
+    pub fn max_mappings(d: Mapping, n: Mapping) -> Mapping {
         n.pow(d as u32)
     }
 
     /// Takes an mapping f to the base n as input and returns the mapping as a hashmap
-    pub fn to_hashmap(n : Mapping, f : Mapping) -> HashMap<Mapping,Mapping>{
+    pub fn to_hashmap(n: Mapping, f: Mapping) -> HashMap<Mapping, Mapping> {
         let mut mapping = HashMap::new();
 
         let mut rest = f;

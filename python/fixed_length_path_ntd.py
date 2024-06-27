@@ -6,22 +6,36 @@
 # adjacency stays the same
 
 
-FILE_PATH = '../data/nice_tree_decompositions/e_tau_modifying_paths/'
+FILE_PATH = "../data/nice_tree_decompositions/e_tau_modifying_paths/"
 
 
 # Creates e_tau modyfying path of length n and with i additional edges
 # 0 <= i < n
-def e_tau_modifying_path(n,i):
-    output = "# auto generated nice tree decomposition with " + str(n) + " vertices and " + str(n + i) +  " possible edges. \n"
-    output += "s " + str(2*n) + " 2 " + str(n) + "\n"
+def e_tau_modifying_path(n, i):
+    output = (
+        "# auto generated nice tree decomposition with "
+        + str(n)
+        + " vertices and "
+        + str(n + i)
+        + " possible edges. \n"
+    )
+    output += "s " + str(2 * n) + " 2 " + str(n) + "\n"
     output += "n 1 l 1\n"
 
     vertex_counter = 1
     node_counter = 2
 
-    for j in range(1, n):
+    for _ in range(1, n):
         if vertex_counter <= i:
-            output += "n " + str(node_counter) + " i " + str(vertex_counter) + " " + str(vertex_counter+1) + "\n"
+            output += (
+                "n "
+                + str(node_counter)
+                + " i "
+                + str(vertex_counter)
+                + " "
+                + str(vertex_counter + 1)
+                + "\n"
+            )
             node_counter += 1
             output += "n " + str(node_counter) + " f " + str(vertex_counter + 1) + "\n"
             node_counter += 1
@@ -42,20 +56,20 @@ def e_tau_modifying_path(n,i):
 
     return output
 
+
 # a function that exports the generated graphs into files
 def text_to_file(text, file_name):
-    f = open(file_name, "w")
-    f.write(text)
-    f.close()
+    with open(file_name, "w") as f:
+        f.write(text)
 
 
 def e_tau_modifying_paths(n):
-
-    for i in range(0,n):
-        text = e_tau_modifying_path(n,i)
+    for i in range(0, n):
+        text = e_tau_modifying_path(n, i)
         filename = "e_tau_modifying_path_" + str(n) + "_" + str(i) + ".ntd"
         text_to_file(text, FILE_PATH + filename)
 
 
-for j in range(2,14):
-    e_tau_modifying_paths(j)
+if __name__ == "__main__":
+    for j in range(2, 14):
+        e_tau_modifying_paths(j)

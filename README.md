@@ -1,27 +1,25 @@
-# Counting Homomorphisms in Rust
+# Counting homomorphisms in Rust
 
-This repository contains an implementation of the dynamic programm of 
-[Diaz, Serna and Thilikos](https://www.sciencedirect.com/science/article/pii/S0304397502000178)
-for computing the number of homomorphisms between two graphs and a modified version of it. 
-The modification aims at speeding up the computation of the number of graph homomorphisms
-for all graphs which could have a specific tree decomposition.
-Its implementation is written in Rust and additionally contains a 
-file handler for the file format explained in the next sections and some running time experiments.
+[Díaz, Serna, and Thilikos](https://www.sciencedirect.com/science/article/pii/S0304397502000178) (2002) introduced a dynamic programming algorithm to count the number of [graph homomorphisms](https://en.wikipedia.org/wiki/Graph_homomorphism) from a (small) pattern graph to a (large) host graph.
+The algorithm runs in time O(n^{t+1}), where n is the number of vertices of the host graph and t is the [treewidth](https://en.wikipedia.org/wiki/Treewidth) of the pattern graph.
 
-## input Format for graphs
+In this repository, we provide a clean implementation of this dynamic programming algorithm in Rust, a test suite, and running time experiments.
+Moreover, we engineer an extension of this algorithm that enables us to compute many homomorphisms in parallel: In particular, given a tree decomposition T of a k-vertex graph, our enhanced program can simultaneously count homomorphisms from _all_ k-vertex pattern graphs for which T is a valid tree decomposition.
 
-Here is an example of the graph format, which is a simplification of 
-the [METIS](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) format.
+## Input format for graphs
+
+We use a simplified version of the [METIS](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) format to represent graphs.
+Here is an example of the graph format:
 
 ```
 % A graph with 5 vertices and 3 edges
 5 3
-%  Here begins the list of neighbours of each vertex
+% vertex 1 has neighbors 4 and 5:
 4 5
-    
-    
-% The following line expresses the neighbours (1 and 5) 
-% of vertex 4 
+% vertex 2 has no neighbors:
+
+
+% vertex 4 has neighbors 1 and 5:
 1 5
 1 4
 ```
@@ -30,18 +28,19 @@ The example represents the following graph.
 
 <img src="secondary_ressources/graph_format_example.png" width="200">
 
-Consisting of the following parts:
-1) Command lines begin with `%`
-2) The fist non-command line states the number of vertices and then the number of edges.
-3) The following lines describe the adjacency of the graph. 
-The i-th non-command line reports the neighbours of the i-th vertex
+More precisely, the input format has the following parts:
 
-It also supports the graph format used for the [PACE challenge](https://github.com/PACE-challenge/Treewidth)
+1. Comments begin with `%`
+2. The first non-comment line contains the number of vertices and the number of edges
+3. The remaining lines contain the neighbors of each vertex: the i-th non-comment line contains the neighbors of the i-th vertex
 
-## Input Format for NTD
+Additionally, we also support the graph format used for the [PACE challenge](https://github.com/PACE-challenge/Treewidth)
 
-Here is an example for the input format of nice tree decompositions ending with `.ntd` extension. 
-Format has been inspired by [this format for tree decompositions](https://github.com/PACE-challenge/Treewidth#output-format)
+## Input format nice tree decompositions
+
+To store nice tree decompositions, we use a custom format with the file extension `.ntd`.
+The format has been inspired by [this format for tree decompositions](https://github.com/PACE-challenge/Treewidth#output-format).
+Here is an example:
 
 ```
 s 10 2 4
@@ -66,34 +65,25 @@ a 9 8
 a 10 9
 ```
 
-The example represents the following nice tree decomposition.
+The example represents the following nice tree decomposition:
 
 <img src="secondary_ressources/example_graph_ntd_format.jpg" width="200">
 
-Consisting of three parts:
-1. with `s` at the beginning: This line describes the main parameter of 
-this nice tree decomposition : number of nodes, width + 1 & number of 
-vertices of the original graph.
-2. wit `n` at the beginning: These line describe the nodes. The first argument
-stands for the ID of the node, the second argument describes the sort of node:
+The `.ntd` files consist of three parts:
+
+1. `s`-line: This line describes the main parameters of the nice tree decomposition: number of nodes, width + 1, and number of vertices of the original graph.
+2. `n`-lines: These line describe the nodes of the tree. The first argument is the ID of the node, the second argument describes the node type:
    1. `l` : Leaf Node
    2. `i` : Introduce Node
    3. `f` : Forget Node
    4. `j` : Join Node
-3. with `a` at the beginning: Describe adjacency of the tree nodes. For example
-`a 7 3` means there is an edge from node `7` to node `3` i. e. that node `3` is the 
-child of node `7`.
+3. `a`-lines: These lines describe the edges of the tree. For example, `a 7 3` means there is an edge from node `7` to node `3`, that is, that node `3` is the child of node `7`.
 
+Note that the indices in the file run from 1 to N while the internal representation consists of indices 0 to N-1.
 
+## How to run the experiments
 
-Note that the indices in the file go from 1 to N while the internal representation consists of indices 0 to N-1.
-
-## How to run the Experiments
-
-1. clone the complete repository. Test data is already included.
+1. Clone the repository. Test data is already included.
 2. Run the command `cargo test` in the main project folder to run unit tests.
-3. Run the command `cargo run --release` in the main project folder to start tests.
-4. finish
-5. To visualize the results use the `evaluation.ipynb` file, which can 
-be executed with jupyter-lab and immediately shows the results. Make sure, you have installed
-the `seaborn` python package to run the code.
+3. Run the command `cargo run --release` in the main project folder to start the experiments.
+4. To visualize the results, use the `evaluation.ipynb` file, which can be executed with jupyter-lab and immediately shows the results, provided that the `seaborn` python package is installed.
